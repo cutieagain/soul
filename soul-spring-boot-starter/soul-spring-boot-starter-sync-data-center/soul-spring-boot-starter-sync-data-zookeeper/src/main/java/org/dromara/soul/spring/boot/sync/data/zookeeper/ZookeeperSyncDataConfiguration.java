@@ -44,6 +44,7 @@ import java.util.List;
 @ConditionalOnProperty(prefix = "soul.sync.zookeeper", name = "url")
 @EnableConfigurationProperties(ZookeeperConfig.class)
 @Slf4j
+// Zookeeper同步配置
 public class ZookeeperSyncDataConfiguration {
 
     /**
@@ -56,6 +57,7 @@ public class ZookeeperSyncDataConfiguration {
      * @return the sync data service
      */
     @Bean
+    // Zookeeper同步的bean初始化
     public SyncDataService syncDataService(final ObjectProvider<ZkClient> zkClient, final ObjectProvider<PluginDataSubscriber> pluginSubscriber,
                                            final ObjectProvider<List<MetaDataSubscriber>> metaSubscribers, final ObjectProvider<List<AuthDataSubscriber>> authSubscribers) {
         log.info("you use zookeeper sync soul data.......");

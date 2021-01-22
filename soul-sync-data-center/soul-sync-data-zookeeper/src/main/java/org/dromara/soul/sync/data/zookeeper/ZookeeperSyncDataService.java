@@ -66,23 +66,34 @@ public class ZookeeperSyncDataService implements SyncDataService, AutoCloseable 
     public ZookeeperSyncDataService(final ZkClient zkClient, final PluginDataSubscriber pluginDataSubscriber,
                                     final List<MetaDataSubscriber> metaDataSubscribers, final List<AuthDataSubscriber> authDataSubscribers) {
         this.zkClient = zkClient;
+        // 插件数据订阅
         this.pluginDataSubscriber = pluginDataSubscriber;
+        // 元数据订阅
         this.metaDataSubscribers = metaDataSubscribers;
+        // 权限数据订阅
         this.authDataSubscribers = authDataSubscribers;
+        // 监听所有的数据：插件，选择器，规则
         watcherData();
-        watchAppAuth();
+        // 监听元数据
         watchMetaData();
+        // 监听应用权限
+        watchAppAuth();
     }
 
+    // 监听所有的数据：插件，选择器，规则
     private void watcherData() {
+        // 插件顶层目录
         final String pluginParent = ZkPathConstants.PLUGIN_PARENT;
+        // 获取当前目录下的子列表【都是插件】
         List<String> pluginZKs = zkClientGetChildren(pluginParent);
         for (String pluginName : pluginZKs) {
+            // 遍历监听所有的插件变动
             watcherAll(pluginName);
         }
         zkClient.subscribeChildChanges(pluginParent, (parentPath, currentChildren) -> {
             if (CollectionUtils.isNotEmpty(currentChildren)) {
                 for (String pluginName : currentChildren) {
+                    // 监听子插件变动
                     watcherAll(pluginName);
                 }
             }
@@ -90,20 +101,29 @@ public class ZookeeperSyncDataService implements SyncDataService, AutoCloseable 
     }
 
     private void watcherAll(final String pluginName) {
+        // 监听插件变动
         watcherPlugin(pluginName);
+        // 监听选择器变动
         watcherSelector(pluginName);
+        // 监听规则变动
         watcherRule(pluginName);
     }
 
+    // 监听插件变动
     private void watcherPlugin(final String pluginName) {
+        // 插件主目录下新增一个插件路径
         String pluginPath = ZkPathConstants.buildPluginPath(pluginName);
+        // 如果不存在的话则创建
         if (!zkClient.exists(pluginPath)) {
             zkClient.createPersistent(pluginPath, true);
         }
+        // 读取并缓存插件信息
         cachePluginData(zkClient.readData(pluginPath));
+        // 订阅插件信息变动
         subscribePluginDataChanges(pluginPath, pluginName);
     }
 
+    // 监听选择器变动
     private void watcherSelector(final String pluginName) {
         String selectorParentPath = ZkPathConstants.buildSelectorParentPath(pluginName);
         List<String> childrenList = zkClientGetChildren(selectorParentPath);
@@ -117,6 +137,7 @@ public class ZookeeperSyncDataService implements SyncDataService, AutoCloseable 
         subscribeChildChanges(ConfigGroupEnum.SELECTOR, selectorParentPath, childrenList);
     }
 
+    // 监听规则变动
     private void watcherRule(final String pluginName) {
         String ruleParent = ZkPathConstants.buildRuleParentPath(pluginName);
         List<String> childrenList = zkClientGetChildren(ruleParent);
@@ -130,6 +151,7 @@ public class ZookeeperSyncDataService implements SyncDataService, AutoCloseable 
         subscribeChildChanges(ConfigGroupEnum.RULE, ruleParent, childrenList);
     }
 
+    // 监听应用权限
     private void watchAppAuth() {
         final String appAuthParent = ZkPathConstants.APP_AUTH_PARENT;
         List<String> childrenList = zkClientGetChildren(appAuthParent);
@@ -143,6 +165,7 @@ public class ZookeeperSyncDataService implements SyncDataService, AutoCloseable 
         subscribeChildChanges(ConfigGroupEnum.APP_AUTH, appAuthParent, childrenList);
     }
 
+    // 监听元数据
     private void watchMetaData() {
         final String metaDataPath = ZkPathConstants.META_DATA;
         List<String> childrenList = zkClientGetChildren(metaDataPath);
@@ -153,6 +176,7 @@ public class ZookeeperSyncDataService implements SyncDataService, AutoCloseable 
                 subscribeMetaDataChanges(realPath);
             });
         }
+        // 监听类型错误 cutie 20200123
         subscribeChildChanges(ConfigGroupEnum.APP_AUTH, metaDataPath, childrenList);
     }
 
@@ -213,9 +237,9 @@ public class ZookeeperSyncDataService implements SyncDataService, AutoCloseable 
         }
     }
 
+    // 订阅插件信息变动
     private void subscribePluginDataChanges(final String pluginPath, final String pluginName) {
         zkClient.subscribeDataChanges(pluginPath, new IZkDataListener() {
-
             @Override
             public void handleDataChange(final String dataPath, final Object data) {
                 Optional.ofNullable(data)
@@ -291,10 +315,13 @@ public class ZookeeperSyncDataService implements SyncDataService, AutoCloseable 
         });
     }
 
+    // 缓存插件信息
     private void cachePluginData(final PluginData pluginData) {
+        //todo：java8学习 cutie 20200123
         Optional.ofNullable(pluginData).flatMap(data -> Optional.ofNullable(pluginDataSubscriber)).ifPresent(e -> e.onSubscribe(pluginData));
     }
 
+    //
     private void cacheSelectorData(final SelectorData selectorData) {
         Optional.ofNullable(selectorData)
                 .ifPresent(data -> Optional.ofNullable(pluginDataSubscriber).ifPresent(e -> e.onSelectorSubscribe(data)));
@@ -357,10 +384,13 @@ public class ZookeeperSyncDataService implements SyncDataService, AutoCloseable 
         return parent + "/" + children;
     }
 
+    // 获取当前目录下的子列表
     private List<String> zkClientGetChildren(final String parent) {
+        // 如果顶层目录不存在的话则创建一个
         if (!zkClient.exists(parent)) {
             zkClient.createPersistent(parent, true);
         }
+        // 获取当前目录下的子列表
         return zkClient.getChildren(parent);
     }
 
