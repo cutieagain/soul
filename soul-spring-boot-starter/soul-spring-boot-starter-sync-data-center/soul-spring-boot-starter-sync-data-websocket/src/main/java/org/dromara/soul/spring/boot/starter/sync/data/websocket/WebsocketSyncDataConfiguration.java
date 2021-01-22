@@ -54,6 +54,7 @@ public class WebsocketSyncDataConfiguration {
      * @param authSubscribers   the auth subscribers
      * @return the sync data service
      */
+    // 加载了对应的websocket配置，插件变动订阅者，元数据变动订阅者，权限变动订阅者
     @Bean
     public SyncDataService websocketSyncDataService(final ObjectProvider<WebsocketConfig> websocketConfig, final ObjectProvider<PluginDataSubscriber> pluginSubscriber,
                                            final ObjectProvider<List<MetaDataSubscriber>> metaSubscribers, final ObjectProvider<List<AuthDataSubscriber>> authSubscribers) {

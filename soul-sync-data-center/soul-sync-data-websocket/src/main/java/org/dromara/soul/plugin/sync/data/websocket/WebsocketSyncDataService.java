@@ -60,8 +60,11 @@ public class WebsocketSyncDataService implements SyncDataService, AutoCloseable 
                                     final PluginDataSubscriber pluginDataSubscriber,
                                     final List<MetaDataSubscriber> metaDataSubscribers,
                                     final List<AuthDataSubscriber> authDataSubscribers) {
+        // 获取注册的url列表
         String[] urls = StringUtils.split(websocketConfig.getUrls(), ",");
+        // 线程池
         executor = new ScheduledThreadPoolExecutor(urls.length, SoulThreadFactory.create("websocket-connect", true));
+        // 新增插件订阅Websocket订阅者信息
         for (String url : urls) {
             try {
                 clients.add(new SoulWebsocketClient(new URI(url), Objects.requireNonNull(pluginDataSubscriber), metaDataSubscribers, authDataSubscribers));
@@ -71,12 +74,14 @@ public class WebsocketSyncDataService implements SyncDataService, AutoCloseable 
         }
         try {
             for (WebSocketClient client : clients) {
+                // Websocket连接，30s
                 boolean success = client.connectBlocking(3000, TimeUnit.MILLISECONDS);
                 if (success) {
                     log.info("websocket connection is successful.....");
                 } else {
                     log.error("websocket connection is error.....");
                 }
+                // 定时连接同步配置信息
                 executor.scheduleAtFixedRate(() -> {
                     try {
                         if (client.isClosed()) {

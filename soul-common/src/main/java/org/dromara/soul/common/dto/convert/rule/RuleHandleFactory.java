@@ -43,8 +43,10 @@ public final class RuleHandleFactory {
     /**
      * The default RuleHandle.
      */
+    // 为什么默认使用的是SpringCloudRuleHandle的？ cutie 20200120
     private static final Class<? extends RuleHandle> DEFAULT_RULE_HANDLE = SpringCloudRuleHandle.class;
 
+    // 是否少了一个SpringCloudRuleHandle？ cutie 20200120
     static {
         RPC_TYPE_TO_RULE_HANDLE_CLASS.put(RpcTypeEnum.HTTP, DivideRuleHandle.class);
         RPC_TYPE_TO_RULE_HANDLE_CLASS.put(RpcTypeEnum.DUBBO, DubboRuleHandle.class);
@@ -61,6 +63,7 @@ public final class RuleHandleFactory {
         if (Objects.isNull(rpcType)) {
             return null;
         }
+        // 这里如果找不到是否就应该说不支持？ cutie 20200120
         Class<? extends RuleHandle> clazz = RPC_TYPE_TO_RULE_HANDLE_CLASS.getOrDefault(rpcType, DEFAULT_RULE_HANDLE);
         try {
             return clazz.newInstance().createDefault(path);

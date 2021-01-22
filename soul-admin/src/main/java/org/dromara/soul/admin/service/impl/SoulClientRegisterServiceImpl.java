@@ -125,13 +125,16 @@ public class SoulClientRegisterServiceImpl implements SoulClientRegisterService 
     @Override
     @Transactional
     public String registerSpringMvc(final SpringMvcRegisterDTO dto) {
+        // 默认非元数据，这个有可能是元数据类型吗？ cutie 20200120
         if (dto.isRegisterMetaData()) {
             MetaDataDO exist = metaDataMapper.findByPath(dto.getPath());
             if (Objects.isNull(exist)) {
                 saveSpringMvcMetaData(dto);
             }
         }
+        // 注册选择器
         String selectorId = handlerSpringMvcSelector(dto);
+        // 注册规则
         handlerSpringMvcRule(selectorId, dto);
         return SoulResultMessage.SUCCESS;
     }
@@ -290,48 +293,69 @@ public class SoulClientRegisterServiceImpl implements SoulClientRegisterService 
                 Collections.singletonList(MetaDataTransfer.INSTANCE.mapToData(metaDataDTO))));
     }
 
+    // 注册选择器
     private String handlerSpringMvcSelector(final SpringMvcRegisterDTO dto) {
+        // 获取访问前缀
         String contextPath = dto.getContext();
+        // 根据访问前缀获取选择器
         SelectorDO selectorDO = selectorService.findByName(contextPath);
+        // 选择器id
         String selectorId;
+        // 拼uri 主机ip:端口
         String uri = String.join(":", dto.getHost(), String.valueOf(dto.getPort()));
         if (Objects.isNull(selectorDO)) {
+            // 选择器不存在的话则进行注册
             selectorId = registerSelector(contextPath, dto.getRpcType(), dto.getAppName(), uri);
         } else {
+            // 选择器存在的话则获取信息并进行分发
             selectorId = selectorDO.getId();
             //update upstream
             String handle = selectorDO.getHandle();
             String handleAdd;
+            // 根据uri创建DivideUpstream对象
             DivideUpstream addDivideUpstream = buildDivideUpstream(uri);
+            // 根据访问前缀创建选择器对象
             SelectorData selectorData = selectorService.buildByName(contextPath);
+            // handle字段即DivideUpstream对象的json串
             if (StringUtils.isBlank(handle)) {
                 handleAdd = GsonUtils.getInstance().toJson(Collections.singletonList(addDivideUpstream));
             } else {
+                // 如果handle字段存在，就遍历看看是否已经保存过了
                 List<DivideUpstream> exist = GsonUtils.getInstance().fromList(handle, DivideUpstream.class);
                 for (DivideUpstream upstream : exist) {
                     if (upstream.getUpstreamUrl().equals(addDivideUpstream.getUpstreamUrl())) {
+                        // 找到了的话就返回选择器id
                         return selectorId;
                     }
                 }
+                // 添加到存在列表中
                 exist.add(addDivideUpstream);
+                // 转成json串
                 handleAdd = GsonUtils.getInstance().toJson(exist);
             }
+            // 更新用
             selectorDO.setHandle(handleAdd);
+            // 发布通知用
             selectorData.setHandle(handleAdd);
             // update db
             selectorMapper.updateSelective(selectorDO);
-            // submit upstreamCheck
+            // submit upstreamCheck 定时更新提交
             upstreamCheckService.submit(contextPath, addDivideUpstream);
             // publish change event.
+            // ApplicationEventPublisher是ApplicationContext的父接口之一。这接口的作用是：Interface that encapsulates event publication functionality. 功能就是发布事件，也就是把某个事件告诉的所有与这个事件相关的监听器。
+            // 把当前选择器发布给监听选择器发布更新的服务，解耦用不错
             eventPublisher.publishEvent(new DataChangedEvent(ConfigGroupEnum.SELECTOR, DataEventTypeEnum.UPDATE,
                     Collections.singletonList(selectorData)));
         }
         return selectorId;
     }
 
+    // 注册规则
     private void handlerSpringMvcRule(final String selectorId, final SpringMvcRegisterDTO dto) {
+        // 查询下规则是否存在
         RuleDO ruleDO = ruleMapper.findByName(dto.getRuleName());
         if (Objects.isNull(ruleDO)) {
+            // 不存在的话就注册规则
             registerRule(selectorId, dto.getPath(), dto.getRpcType(), dto.getRuleName());
         }
     }
@@ -380,6 +404,7 @@ public class SoulClientRegisterServiceImpl implements SoulClientRegisterService 
             String handler = GsonUtils.getInstance().toJson(Collections.singletonList(divideUpstream));
             selectorDTO.setHandle(handler);
             selectorDTO.setPluginId(getPluginId(PluginEnum.DIVIDE.getName()));
+            // 注册，默认定时分发
             upstreamCheckService.submit(selectorDTO.getName(), divideUpstream);
         }
         SelectorConditionDTO selectorConditionDTO = new SelectorConditionDTO();
@@ -412,7 +437,9 @@ public class SoulClientRegisterServiceImpl implements SoulClientRegisterService 
         return pluginDO.getId();
     }
 
+    // 不存在的话就注册规则
     private void registerRule(final String selectorId, final String path, final String rpcType, final String ruleName) {
+        // 包装规则
         RuleHandle ruleHandle = RuleHandleFactory.ruleHandle(RpcTypeEnum.acquireByName(rpcType), path);
         RuleDTO ruleDTO = RuleDTO.builder()
                 .selectorId(selectorId)
@@ -434,6 +461,7 @@ public class SoulClientRegisterServiceImpl implements SoulClientRegisterService 
             ruleConditionDTO.setOperator(OperatorEnum.EQ.getAlias());
         }
         ruleDTO.setRuleConditions(Collections.singletonList(ruleConditionDTO));
+        // 注册规则
         ruleService.register(ruleDTO);
     }
 }

@@ -73,30 +73,43 @@ public class WebSocketPlugin extends AbstractSoulPlugin {
      * @param webSocketClient  the web socket client
      * @param webSocketService the web socket service
      */
+    // 构造器加载webSocketClient和webSocketService
     public WebSocketPlugin(final WebSocketClient webSocketClient, final WebSocketService webSocketService) {
         this.webSocketClient = webSocketClient;
         this.webSocketService = webSocketService;
     }
 
     @Override
+    // 使用react执行
     protected Mono<Void> doExecute(final ServerWebExchange exchange, final SoulPluginChain chain, final SelectorData selector, final RuleData rule) {
+        // 获取注册的DivideUpstream信息
         final List<DivideUpstream> upstreamList = UpstreamCacheManager.getInstance().findUpstreamListBySelectorId(selector.getId());
+        // 获取soulContext
         final SoulContext soulContext = exchange.getAttribute(Constants.CONTEXT);
+        // 如果upstreamList是空的或者获取soulContext是空的，返回错误信息
         if (CollectionUtils.isEmpty(upstreamList) || Objects.isNull(soulContext)) {
             log.error("divide upstream configuration error：{}", rule.toString());
             return chain.execute(exchange);
         }
+        // 互殴规则
         final DivideRuleHandle ruleHandle = GsonUtils.getInstance().fromJson(rule.getHandle(), DivideRuleHandle.class);
+        // 获取主机ip
         final String ip = Objects.requireNonNull(exchange.getRequest().getRemoteAddress()).getAddress().getHostAddress();
+        // 获取负载均衡的divideUpstream信息
         DivideUpstream divideUpstream = LoadBalanceUtils.selector(upstreamList, ruleHandle.getLoadBalance(), ip);
+        // 如果divideUpstream为空
         if (Objects.isNull(divideUpstream)) {
             log.error("websocket has no upstream");
+            // 找不到对应的divideUpstream
             Object error = SoulResultWrap.error(SoulResultEnum.CANNOT_FIND_URL.getCode(), SoulResultEnum.CANNOT_FIND_URL.getMsg(), null);
             return WebFluxResultUtils.result(exchange, error);
         }
+        // 获取divideUpstream中的请求url
         URI wsRequestUrl = UriComponentsBuilder.fromUri(URI.create(buildWsRealPath(divideUpstream, soulContext))).build().toUri();
         log.info("you websocket urlPath is :{}", wsRequestUrl.toASCIIString());
+        // 获取exchange中的headers
         HttpHeaders headers = exchange.getRequest().getHeaders();
+        // 执行对应的注册方法
         return this.webSocketService.handleRequest(exchange, new SoulWebSocketHandler(
                 wsRequestUrl, this.webSocketClient, filterHeaders(headers), buildWsProtocols(headers)));
     }
