@@ -80,10 +80,15 @@ public final class SoulWebsocketClient extends WebSocketClient {
     
     @SuppressWarnings("ALL")
     private void handleResult(final String result) {
+        // SoulWebsocketClient中接收到订阅的信息进行处理，结果转成websocketData
         WebsocketData websocketData = GsonUtils.getInstance().fromJson(result, WebsocketData.class);
+        // 获取同步的配置的类型
         ConfigGroupEnum groupEnum = ConfigGroupEnum.acquireByName(websocketData.getGroupType());
+        // 获取事件类型
         String eventType = websocketData.getEventType();
+        // 获取各类同步的数据
         String json = GsonUtils.getInstance().toJson(websocketData.getData());
+        // 执行同步方法
         websocketDataHandler.executor(groupEnum, json, eventType);
     }
 }

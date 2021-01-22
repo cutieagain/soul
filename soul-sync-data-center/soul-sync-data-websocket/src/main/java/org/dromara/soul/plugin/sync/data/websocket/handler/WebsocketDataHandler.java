@@ -43,6 +43,7 @@ public class WebsocketDataHandler {
     public WebsocketDataHandler(final PluginDataSubscriber pluginDataSubscriber,
                                 final List<MetaDataSubscriber> metaDataSubscribers,
                                 final List<AuthDataSubscriber> authDataSubscribers) {
+        // 存放配置类型
         ENUM_MAP.put(ConfigGroupEnum.PLUGIN, new PluginDataHandler(pluginDataSubscriber));
         ENUM_MAP.put(ConfigGroupEnum.SELECTOR, new SelectorDataHandler(pluginDataSubscriber));
         ENUM_MAP.put(ConfigGroupEnum.RULE, new RuleDataHandler(pluginDataSubscriber));
@@ -58,6 +59,7 @@ public class WebsocketDataHandler {
      * @param eventType the event type
      */
     public void executor(final ConfigGroupEnum type, final String json, final String eventType) {
+        // 调用配置中的handle方法进行同步
         ENUM_MAP.get(type).handle(json, eventType);
     }
 }
