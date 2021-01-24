@@ -56,6 +56,7 @@ public class HttpSyncDataConfiguration {
      * @return the sync data service
      */
     @Bean
+    // http长轮询服务初始化
     public SyncDataService httpSyncDataService(final ObjectProvider<HttpConfig> httpConfig, final ObjectProvider<PluginDataSubscriber> pluginSubscriber,
                                            final ObjectProvider<List<MetaDataSubscriber>> metaSubscribers, final ObjectProvider<List<AuthDataSubscriber>> authSubscribers) {
         log.info("you use http long pull sync soul data");
@@ -70,6 +71,7 @@ public class HttpSyncDataConfiguration {
      */
     @Bean
     @ConfigurationProperties(prefix = "soul.sync.http")
+    // http长轮询配置
     public HttpConfig httpConfig() {
         return new HttpConfig();
     }

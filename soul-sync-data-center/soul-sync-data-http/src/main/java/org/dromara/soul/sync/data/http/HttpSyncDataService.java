@@ -62,6 +62,7 @@ import org.springframework.web.client.RestTemplate;
  */
 @SuppressWarnings("all")
 @Slf4j
+// 同步服务都实现了SyncDataService和AutoCloseable
 public class HttpSyncDataService implements SyncDataService, AutoCloseable {
 
     private static final AtomicBoolean RUNNING = new AtomicBoolean(false);
@@ -88,9 +89,13 @@ public class HttpSyncDataService implements SyncDataService, AutoCloseable {
 
     public HttpSyncDataService(final HttpConfig httpConfig, final PluginDataSubscriber pluginDataSubscriber,
                                final List<MetaDataSubscriber> metaDataSubscribers, final List<AuthDataSubscriber> authDataSubscribers) {
+        // 数据刷新工厂，包含了所有的刷新操作
         this.factory = new DataRefreshFactory(pluginDataSubscriber, metaDataSubscribers, authDataSubscribers);
+        // http配置
         this.httpConfig = httpConfig;
+        // http配置转为url列表
         this.serverList = Lists.newArrayList(Splitter.on(",").split(httpConfig.getUrl()));
+        // 初始化httpClient
         this.httpClient = createRestTemplate();
         this.start();
     }
@@ -104,6 +109,7 @@ public class HttpSyncDataService implements SyncDataService, AutoCloseable {
 
     private void start() {
         // It could be initialized multiple times, so you need to control that.
+        // 为什么会初始化很多次？
         if (RUNNING.compareAndSet(false, true)) {
             // fetch all group configs.
             this.fetchGroupConfig(ConfigGroupEnum.values());
@@ -118,6 +124,7 @@ public class HttpSyncDataService implements SyncDataService, AutoCloseable {
         }
     }
 
+    // 根据group和url获取配置信息
     private void fetchGroupConfig(final ConfigGroupEnum... groups) throws SoulException {
         for (int index = 0; index < this.serverList.size(); index++) {
             String server = serverList.get(index);
@@ -134,6 +141,7 @@ public class HttpSyncDataService implements SyncDataService, AutoCloseable {
         }
     }
 
+    // 根据group获取配置信息
     private void doFetchGroupConfig(final String server, final ConfigGroupEnum... groups) {
         StringBuilder params = new StringBuilder();
         for (ConfigGroupEnum groupKey : groups) {
@@ -143,6 +151,7 @@ public class HttpSyncDataService implements SyncDataService, AutoCloseable {
         log.info("request configs: [{}]", url);
         String json = null;
         try {
+            // 请求报错 Caused by: org.springframework.web.client.HttpClientErrorException$Unauthorized: 401 : [{"code":600,"message":"token is error"}
             json = this.httpClient.getForObject(url, String.class);
         } catch (RestClientException e) {
             String message = String.format("fetch config fail from server[%s], %s", url, e.getMessage());
@@ -173,6 +182,7 @@ public class HttpSyncDataService implements SyncDataService, AutoCloseable {
     }
 
     @SuppressWarnings("unchecked")
+    // 长轮询的具体操作
     private void doLongPolling(final String server) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>(8);
         for (ConfigGroupEnum group : ConfigGroupEnum.values()) {
