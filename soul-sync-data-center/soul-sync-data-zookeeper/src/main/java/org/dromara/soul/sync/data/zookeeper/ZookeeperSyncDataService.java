@@ -176,8 +176,7 @@ public class ZookeeperSyncDataService implements SyncDataService, AutoCloseable 
                 subscribeMetaDataChanges(realPath);
             });
         }
-        // 监听类型错误 cutie 20200123
-        subscribeChildChanges(ConfigGroupEnum.APP_AUTH, metaDataPath, childrenList);
+        subscribeChildChanges(ConfigGroupEnum.META_DATA, metaDataPath, childrenList);
     }
 
     private void subscribeChildChanges(final ConfigGroupEnum groupKey, final String groupParentPath, final List<String> childrenList) {
