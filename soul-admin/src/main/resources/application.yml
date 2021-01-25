@@ -42,17 +42,20 @@ soul:
     init_script: "META-INF/schema.sql"
     init_enable: true
   sync:
+    nacos:
+      url: localhost:8848
+      namespace: 03bc0f22-78c1-49f0-a26c-7a62c1f7b898
 #    websocket:
 #      enabled: true
 #      zookeeper:
 #          url: localhost:2181
 #          sessionTimeout: 5000
 #          connectionTimeout: 2000
-    http:
-      enabled: true
-  #    nacos:
-  #      url: localhost:8848
-  #      namespace: 1c10d748-af86-43b9-8265-75f487d20c6c
+#    http:
+#      enabled: true
+#    nacos:
+#      url: localhost:8848
+#      namespace: soul
   #      acm:
   #        enabled: false
   #        endpoint: acm.aliyun.com

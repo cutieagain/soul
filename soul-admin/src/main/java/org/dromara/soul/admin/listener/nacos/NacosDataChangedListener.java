@@ -132,7 +132,7 @@ public class NacosDataChangedListener implements DataChangedListener {
                     set.remove(plugin.getName());
                     PLUGIN_MAP.put(plugin.getName(), plugin);
                 });
-                PLUGIN_MAP.keySet().removeAll(set);
+//                PLUGIN_MAP.keySet().removeAll(set);
                 break;
             default:
                 changed.forEach(plugin -> PLUGIN_MAP.put(plugin.getName(), plugin));
@@ -168,7 +168,7 @@ public class NacosDataChangedListener implements DataChangedListener {
                             .collect(Collectors.toList());
                     SELECTOR_MAP.put(selector.getPluginName(), ls);
                 });
-                SELECTOR_MAP.keySet().removeAll(set);
+//                SELECTOR_MAP.keySet().removeAll(set);
                 break;
             default:
                 changed.forEach(selector -> {
@@ -200,7 +200,7 @@ public class NacosDataChangedListener implements DataChangedListener {
                     set.remove(meta.getPath());
                     META_DATA.put(meta.getPath(), meta);
                 });
-                META_DATA.keySet().removeAll(set);
+//                META_DATA.keySet().removeAll(set);
                 break;
             default:
                 changed.forEach(meta -> {
@@ -244,7 +244,7 @@ public class NacosDataChangedListener implements DataChangedListener {
                             .collect(Collectors.toList());
                     RULE_MAP.put(rule.getSelectorId(), ls);
                 });
-                RULE_MAP.keySet().removeAll(set);
+//                RULE_MAP.keySet().removeAll(set);
                 break;
             default:
                 changed.forEach(rule -> {
