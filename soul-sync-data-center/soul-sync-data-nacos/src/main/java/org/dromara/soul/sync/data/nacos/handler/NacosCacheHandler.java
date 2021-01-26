@@ -169,7 +169,7 @@ public class NacosCacheHandler {
             }
         };
         oc.change(getConfigAndSignListener(dataId, listener));
-        LISTENERS.getOrDefault(dataId, new ArrayList<>()).add(listener);
+        LISTENERS.computeIfAbsent(dataId, key -> new ArrayList<>()).add(listener);
     }
 
     protected interface OnChange {
