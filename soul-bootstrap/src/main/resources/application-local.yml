@@ -14,7 +14,7 @@
 # limitations under the License.
 
 server:
-  port: 9195
+  port: 9196
   address: 0.0.0.0
 
 spring:
@@ -40,17 +40,14 @@ soul:
     dubbo :
       parameter: multi
     sync:
-      nacos:
-        url: localhost:8848
-        namespace: 03bc0f22-78c1-49f0-a26c-7a62c1f7b898
-#        websocket :
-#             urls: ws://localhost:9095/websocket
+      websocket :
+           urls: ws://localhost:9095/websocket,ws://localhost:9096/websocket
 #        zookeeper:
 #             url: localhost:2181
 #             sessionTimeout: 5000
 #             connectionTimeout: 2000
 #        http:
-#             url : http://localhost:9095
+        ##             url : http://localhost:9095
 #        nacos:
 #          url: localhost:8848
 #          namespace: 1c10d748-af86-43b9-8265-75f487d20c6c
