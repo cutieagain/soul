@@ -51,19 +51,33 @@ import java.util.Objects;
 @Slf4j
 public class DividePlugin extends AbstractSoulPlugin {
 
+    /**
+     *
+     * @param exchange exchange the current server exchange {@linkplain ServerWebExchange} 请求的信息，以及GlobalPlugin塞进来的SoulContext
+     * @param chain    chain the current chain  {@linkplain ServerWebExchange} 调用链路，所有的加载的插件
+     * @param selector selector    {@linkplain SelectorData} 选择器
+     * @param rule     rule    {@linkplain RuleData} 规则
+     * @return
+     */
     @Override
     protected Mono<Void> doExecute(final ServerWebExchange exchange, final SoulPluginChain chain, final SelectorData selector, final RuleData rule) {
         final SoulContext soulContext = exchange.getAttribute(Constants.CONTEXT);
         assert soulContext != null;
+        // 规则
         final DivideRuleHandle ruleHandle = GsonUtils.getInstance().fromJson(rule.getHandle(), DivideRuleHandle.class);
+        // 获取缓存的调用的url列表信息
         final List<DivideUpstream> upstreamList = UpstreamCacheManager.getInstance().findUpstreamListBySelectorId(selector.getId());
+        // 找不到的话则报错
         if (CollectionUtils.isEmpty(upstreamList)) {
             log.error("divide upstream configuration error： {}", rule.toString());
             Object error = SoulResultWrap.error(SoulResultEnum.CANNOT_FIND_URL.getCode(), SoulResultEnum.CANNOT_FIND_URL.getMsg(), null);
             return WebFluxResultUtils.result(exchange, error);
         }
+        // 获取ip
         final String ip = Objects.requireNonNull(exchange.getRequest().getRemoteAddress()).getAddress().getHostAddress();
+        // 负载均衡选一个调用的url
         DivideUpstream divideUpstream = LoadBalanceUtils.selector(upstreamList, ruleHandle.getLoadBalance(), ip);
+        // 找不到则报错
         if (Objects.isNull(divideUpstream)) {
             log.error("divide has no upstream");
             Object error = SoulResultWrap.error(SoulResultEnum.CANNOT_FIND_URL.getCode(), SoulResultEnum.CANNOT_FIND_URL.getMsg(), null);
@@ -76,6 +90,7 @@ public class DividePlugin extends AbstractSoulPlugin {
         // set the http timeout
         exchange.getAttributes().put(Constants.HTTP_TIME_OUT, ruleHandle.getTimeout());
         exchange.getAttributes().put(Constants.HTTP_RETRY, ruleHandle.getRetry());
+        //包装好调用的信息
         return chain.execute(exchange);
     }
 

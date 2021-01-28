@@ -14,7 +14,7 @@
 # limitations under the License.
 
 server:
-  port: 9096
+  port: 9095
   address: 0.0.0.0
 
 spring:
