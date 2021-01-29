@@ -38,8 +38,11 @@ public class LoadBalanceUtils {
      * @param ip           the ip
      * @return the divide upstream
      */
+    // 根据负载均衡算法选择一个合适的服务提供方
     public static DivideUpstream selector(final List<DivideUpstream> upstreamList, final String algorithm, final String ip) {
+        // spi实现，获取负载均衡算法实现类
         LoadBalance loadBalance = ExtensionLoader.getExtensionLoader(LoadBalance.class).getJoin(algorithm);
+        // 根据负载均衡实现类的select方法获取服务提供方
         return loadBalance.select(upstreamList, ip);
     }
 
