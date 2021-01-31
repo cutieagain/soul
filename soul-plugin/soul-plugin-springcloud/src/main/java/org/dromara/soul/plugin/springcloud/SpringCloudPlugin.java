@@ -47,6 +47,7 @@ import java.util.Objects;
  *
  * @author xiaoyu(myth)
  */
+// springcloud插件
 public class SpringCloudPlugin extends AbstractSoulPlugin {
 
     private final LoadBalancerClient loadBalancer;
@@ -56,33 +57,44 @@ public class SpringCloudPlugin extends AbstractSoulPlugin {
      *
      * @param loadBalancer      the load balancer
      */
+    // 负载均衡，springcloud自带
     public SpringCloudPlugin(final LoadBalancerClient loadBalancer) {
         this.loadBalancer = loadBalancer;
     }
 
     @Override
+    // 执行代理调用
     protected Mono<Void> doExecute(final ServerWebExchange exchange, final SoulPluginChain chain, final SelectorData selector, final RuleData rule) {
+        // 如果没有规则，直接返回空
         if (Objects.isNull(rule)) {
             return Mono.empty();
         }
+        // 获取soul全局context
         final SoulContext soulContext = exchange.getAttribute(Constants.CONTEXT);
         assert soulContext != null;
+        // springcloud规则
         final SpringCloudRuleHandle ruleHandle = GsonUtils.getInstance().fromJson(rule.getHandle(), SpringCloudRuleHandle.class);
+        // 选择器
         final SpringCloudSelectorHandle selectorHandle = GsonUtils.getInstance().fromJson(selector.getHandle(), SpringCloudSelectorHandle.class);
+        // 选择器和规则都不存在
         if (StringUtils.isBlank(selectorHandle.getServiceId()) || StringUtils.isBlank(ruleHandle.getPath())) {
+            // 返回错误信息
             Object error = SoulResultWrap.error(SoulResultEnum.CANNOT_CONFIG_SPRINGCLOUD_SERVICEID.getCode(), SoulResultEnum.CANNOT_CONFIG_SPRINGCLOUD_SERVICEID.getMsg(), null);
             return WebFluxResultUtils.result(exchange, error);
         }
-
+        // 负载均衡选择一个实例
         final ServiceInstance serviceInstance = loadBalancer.choose(selectorHandle.getServiceId());
+        // 如果负载均衡选择的实例是空
         if (Objects.isNull(serviceInstance)) {
+            // 返回错误信息
             Object error = SoulResultWrap.error(SoulResultEnum.SPRINGCLOUD_SERVICEID_IS_ERROR.getCode(), SoulResultEnum.SPRINGCLOUD_SERVICEID_IS_ERROR.getMsg(), null);
             return WebFluxResultUtils.result(exchange, error);
         }
+        // 获取uri
         final URI uri = loadBalancer.reconstructURI(serviceInstance, URI.create(soulContext.getRealUrl()));
-
+        //获取真实的url地址
         String realURL = buildRealURL(uri.toASCIIString(), soulContext.getHttpMethod(), exchange.getRequest().getURI().getQuery());
-
+        // 存储需要执行调用的信息到exchange
         exchange.getAttributes().put(Constants.HTTP_URL, realURL);
         //set time out.
         exchange.getAttributes().put(Constants.HTTP_TIME_OUT, ruleHandle.getTimeout());

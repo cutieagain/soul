@@ -57,6 +57,32 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!--soul springCloud plugin start-->
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>soul-spring-boot-starter-plugin-springcloud</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-commons</artifactId>
+            <version>2.2.0.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+            <version>2.2.0.RELEASE</version>
+        </dependency>
+
+        <!-- 当前使用eureka当注册，使用这个 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+            <version>2.2.0.RELEASE</version>
+        </dependency>
+        <!--soul springCloud plugin end-->
+
         <!--if you use http proxy end this-->
 
         <!--soul springCloud plugin start-->

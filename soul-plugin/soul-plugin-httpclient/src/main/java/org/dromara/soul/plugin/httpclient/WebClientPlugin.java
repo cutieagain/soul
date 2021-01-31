@@ -65,17 +65,24 @@ public class WebClientPlugin implements SoulPlugin {
 
     @Override
     public Mono<Void> execute(final ServerWebExchange exchange, final SoulPluginChain chain) {
+        // 获取soulcontext
         final SoulContext soulContext = exchange.getAttribute(Constants.CONTEXT);
         assert soulContext != null;
+        // 获取请求的url
         String urlPath = exchange.getAttribute(Constants.HTTP_URL);
         if (StringUtils.isEmpty(urlPath)) {
+            // 如果是空，返回错误信息
             Object error = SoulResultWrap.error(SoulResultEnum.CANNOT_FIND_URL.getCode(), SoulResultEnum.CANNOT_FIND_URL.getMsg(), null);
             return WebFluxResultUtils.result(exchange, error);
         }
+        // 超时时间
         long timeout = (long) Optional.ofNullable(exchange.getAttribute(Constants.HTTP_TIME_OUT)).orElse(3000L);
+        // 重试册数
         int retryTimes = (int) Optional.ofNullable(exchange.getAttribute(Constants.HTTP_RETRY)).orElse(0);
         log.info("The request urlPath is {}, retryTimes is {}", urlPath, retryTimes);
+        // 方法
         HttpMethod method = HttpMethod.valueOf(exchange.getRequest().getMethodValue());
+        // 执行方法
         WebClient.RequestBodySpec requestBodySpec = webClient.method(method).uri(urlPath);
         return handleRequestBody(requestBodySpec, exchange, timeout, retryTimes, chain);
     }

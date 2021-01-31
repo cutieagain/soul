@@ -46,6 +46,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author xiaoyu(Myth)
  */
+// 加载springcloud使用的bean
 @Slf4j
 public class SpringCloudClientBeanPostProcessor implements BeanPostProcessor {
 
@@ -63,39 +64,54 @@ public class SpringCloudClientBeanPostProcessor implements BeanPostProcessor {
      * @param config the soul spring cloud config
      * @param env    the env
      */
+    // 初始化配置获取
     public SpringCloudClientBeanPostProcessor(final SoulSpringCloudConfig config, final Environment env) {
         ValidateUtils.validate(config, env);
         this.config = config;
         this.env = env;
+        // 注册地址
         this.url = config.getAdminUrl() + "/soul-client/springcloud-register";
         executorService = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
     }
 
+    // 注册
     @Override
     public Object postProcessAfterInitialization(@NonNull final Object bean, @NonNull final String beanName) throws BeansException {
+        // 如果是全部代理
         if (config.isFull()) {
             return bean;
         }
+        // 请求的controller注解获取
         Controller controller = AnnotationUtils.findAnnotation(bean.getClass(), Controller.class);
         RestController restController = AnnotationUtils.findAnnotation(bean.getClass(), RestController.class);
         RequestMapping requestMapping = AnnotationUtils.findAnnotation(bean.getClass(), RequestMapping.class);
+        // 有一个就获取一个
         if (controller != null || restController != null || requestMapping != null) {
             String prePath = "";
+            // 找到controller上的注解
             SoulSpringCloudClient clazzAnnotation = AnnotationUtils.findAnnotation(bean.getClass(), SoulSpringCloudClient.class);
+            // 如果存在注解则代理
             if (Objects.nonNull(clazzAnnotation)) {
+                // 如果是全部都代理
                 if (clazzAnnotation.path().indexOf("*") > 1) {
+                    // 路径都进行注册
                     String finalPrePath = prePath;
                     executorService.execute(() -> RegisterUtils.doRegister(buildJsonParams(clazzAnnotation, finalPrePath), url,
                             RpcTypeEnum.SPRING_CLOUD));
                     return bean;
                 }
+                // 不然就注册注解的路径
                 prePath = clazzAnnotation.path();
             }
+            // 需要代理的方法数组
             final Method[] methods = ReflectionUtils.getUniqueDeclaredMethods(bean.getClass());
             for (Method method : methods) {
+                // 找到方法代理
                 SoulSpringCloudClient soulSpringCloudClient = AnnotationUtils.findAnnotation(method, SoulSpringCloudClient.class);
+                // 存在方法代理
                 if (Objects.nonNull(soulSpringCloudClient)) {
                     String finalPrePath = prePath;
+                    // 进行注册
                     executorService.execute(() -> RegisterUtils.doRegister(buildJsonParams(soulSpringCloudClient, finalPrePath), url,
                             RpcTypeEnum.SPRING_CLOUD));
                 }
@@ -104,6 +120,7 @@ public class SpringCloudClientBeanPostProcessor implements BeanPostProcessor {
         return bean;
     }
 
+    // 封装注册dto
     private String buildJsonParams(final SoulSpringCloudClient soulSpringCloudClient, final String prePath) {
         String contextPath = config.getContextPath();
         String appName = env.getProperty("spring.application.name");

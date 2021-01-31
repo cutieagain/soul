@@ -28,6 +28,7 @@ import java.io.IOException;
  *
  * @author severez
  */
+// 注册工具类
 @Slf4j
 public final class RegisterUtils {
 
@@ -41,8 +42,10 @@ public final class RegisterUtils {
      * @param url         url
      * @param rpcTypeEnum rcp type
      */
+    // 注册
     public static void doRegister(final String json, final String url, final RpcTypeEnum rpcTypeEnum) {
         try {
+            // 使用json注册到eureka
             String result = OkHttpTools.getInstance().post(url, json);
             if (AdminConstants.SUCCESS.equals(result)) {
                 log.info("{} client register success: {} ", rpcTypeEnum.getName(), json);

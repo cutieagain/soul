@@ -30,6 +30,7 @@ import org.springframework.core.env.Environment;
  *
  * @author xiaoyu
  */
+// springcloud配置信息
 @Configuration
 public class SoulSpringCloudClientConfiguration {
     
@@ -40,6 +41,7 @@ public class SoulSpringCloudClientConfiguration {
      * @param env                   the env
      * @return the spring cloud client bean post processor
      */
+    // 注册配置
     @Bean
     public SpringCloudClientBeanPostProcessor springCloudClientBeanPostProcessor(final SoulSpringCloudConfig soulSpringCloudConfig, final Environment env) {
         return new SpringCloudClientBeanPostProcessor(soulSpringCloudConfig, env);

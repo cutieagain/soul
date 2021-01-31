@@ -53,14 +53,18 @@ public class WebClientResponsePlugin implements SoulPlugin {
     @Override
     public Mono<Void> execute(final ServerWebExchange exchange, final SoulPluginChain chain) {
         return chain.execute(exchange).then(Mono.defer(() -> {
+            // 请求返回结果
             ServerHttpResponse response = exchange.getResponse();
+            // 客户端返回
             ClientResponse clientResponse = exchange.getAttribute(Constants.CLIENT_RESPONSE_ATTR);
+            // 如果返回结果为空，状态为失败，返回错误信息
             if (Objects.isNull(clientResponse)
                     || response.getStatusCode() == HttpStatus.BAD_GATEWAY
                     || response.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR) {
                 Object error = SoulResultWrap.error(SoulResultEnum.SERVICE_RESULT_ERROR.getCode(), SoulResultEnum.SERVICE_RESULT_ERROR.getMsg(), null);
                 return WebFluxResultUtils.result(exchange, error);
             }
+            // 超时，返回超时错误
             if (response.getStatusCode() == HttpStatus.GATEWAY_TIMEOUT) {
                 Object error = SoulResultWrap.error(SoulResultEnum.SERVICE_TIMEOUT.getCode(), SoulResultEnum.SERVICE_TIMEOUT.getMsg(), null);
                 return WebFluxResultUtils.result(exchange, error);
@@ -68,6 +72,7 @@ public class WebClientResponsePlugin implements SoulPlugin {
             response.setStatusCode(clientResponse.statusCode());
             response.getCookies().putAll(clientResponse.cookies());
             response.getHeaders().putAll(clientResponse.headers().asHttpHeaders());
+            // 返回结果
             return response.writeWith(clientResponse.body(BodyExtractors.toDataBuffers()));
         }));
     }
