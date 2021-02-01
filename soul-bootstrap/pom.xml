@@ -120,7 +120,7 @@
 <!--        </dependency>-->
 
         <!--soul  apache dubbo plugin start-->
-        <!-- <dependency>
+         <dependency>
             <groupId>org.dromara</groupId>
             <artifactId>soul-spring-boot-starter-plugin-apache-dubbo</artifactId>
             <version>${project.version}</version>
@@ -129,7 +129,7 @@
             <groupId>org.apache.dubbo</groupId>
             <artifactId>dubbo</artifactId>
             <version>2.7.5</version>
-        </dependency>-->
+        </dependency>
         <!-- Dubbo Nacos registry dependency -->
       <!--  <dependency>
             <groupId>org.apache.dubbo</groupId>
@@ -142,7 +142,7 @@
             <version>1.1.4</version>
         </dependency>-->
         <!-- Dubbo zookeeper registry dependency start -->
-       <!-- <dependency>
+        <dependency>
             <groupId>org.apache.curator</groupId>
             <artifactId>curator-client</artifactId>
             <version>4.0.1</version>
@@ -156,12 +156,12 @@
             <groupId>org.apache.curator</groupId>
             <artifactId>curator-recipes</artifactId>
             <version>4.0.1</version>
-        </dependency>-->
+        </dependency>
         <!-- Dubbo zookeeper registry dependency end -->
         <!-- soul  apache dubbo plugin end-->
 
         <!--soul alibaba dubbo plugin start-->
-        <dependency>
+        <!--<dependency>
             <groupId>org.dromara</groupId>
             <artifactId>soul-spring-boot-starter-plugin-alibaba-dubbo</artifactId>
             <version>${project.version}</version>
@@ -185,7 +185,7 @@
             <groupId>org.apache.curator</groupId>
             <artifactId>curator-recipes</artifactId>
             <version>${curator.version}</version>
-        </dependency>
+        </dependency>-->
         <!-- soul  alibaba dubbo plugin end-->
 
         <!-- soul ratelimiter plugin start-->

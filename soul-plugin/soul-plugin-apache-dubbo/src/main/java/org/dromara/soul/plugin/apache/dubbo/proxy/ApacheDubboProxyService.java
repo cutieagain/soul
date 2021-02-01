@@ -67,25 +67,32 @@ public class ApacheDubboProxyService {
      * @return the object
      * @throws SoulException the soul exception
      */
+    // apacheDubbo泛化调用
     public Mono<Object> genericInvoker(final String body, final MetaData metaData, final ServerWebExchange exchange) throws SoulException {
         // issue(https://github.com/dromara/soul/issues/471), add dubbo tag route
+        // 获取路由信息
         String dubboTagRouteFromHttpHeaders = exchange.getRequest().getHeaders().getFirst(Constants.DUBBO_TAG_ROUTE);
         if (StringUtils.isNotBlank(dubboTagRouteFromHttpHeaders)) {
             RpcContext.getContext().setAttachment(CommonConstants.TAG_KEY, dubboTagRouteFromHttpHeaders);
         }
+        // 引用获取
         ReferenceConfig<GenericService> reference = ApplicationConfigCache.getInstance().get(metaData.getPath());
         if (Objects.isNull(reference) || StringUtils.isEmpty(reference.getInterface())) {
             ApplicationConfigCache.getInstance().invalidate(metaData.getPath());
             reference = ApplicationConfigCache.getInstance().initRef(metaData);
         }
+        // 泛化服务
         GenericService genericService = reference.get();
         Pair<String[], Object[]> pair;
+        // 参数封装
         if (ParamCheckUtils.dubboBodyIsEmpty(body)) {
             pair = new ImmutablePair<>(new String[]{}, new Object[]{});
         } else {
             pair = dubboParamResolveService.buildParameter(body, metaData.getParameterTypes());
         }
+        //异步调用
         CompletableFuture<Object> future = genericService.$invokeAsync(metaData.getMethodName(), pair.getLeft(), pair.getRight());
+        // 异步返回调用链
         return Mono.fromFuture(future.thenApply(ret -> {
             if (Objects.isNull(ret)) {
                 ret = Constants.DUBBO_RPC_RESULT_EMPTY;
