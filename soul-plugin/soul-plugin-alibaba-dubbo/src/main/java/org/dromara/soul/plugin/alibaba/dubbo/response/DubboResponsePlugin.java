@@ -48,6 +48,7 @@ public class DubboResponsePlugin implements SoulPlugin {
      * @return {@code Mono<Void>} to indicate when request processing is complete
      */
     @Override
+    // 封装返回数据
     public Mono<Void> execute(final ServerWebExchange exchange, final SoulPluginChain chain) {
         return chain.execute(exchange).then(Mono.defer(() -> {
             final Object result = exchange.getAttribute(Constants.DUBBO_RPC_RESULT);

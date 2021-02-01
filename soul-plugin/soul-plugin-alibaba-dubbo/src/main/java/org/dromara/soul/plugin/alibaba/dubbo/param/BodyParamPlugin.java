@@ -51,18 +51,27 @@ public class BodyParamPlugin implements SoulPlugin {
     }
 
     @Override
+    // dubbo参数解析
     public Mono<Void> execute(final ServerWebExchange exchange, final SoulPluginChain chain) {
+        // 请求信息
         final ServerHttpRequest request = exchange.getRequest();
+        // Soul上下文
         final SoulContext soulContext = exchange.getAttribute(Constants.CONTEXT);
+        // 如果是Dubbo的参数进行解析
         if (Objects.nonNull(soulContext) && RpcTypeEnum.DUBBO.getName().equals(soulContext.getRpcType())) {
+            // 获取请求类型
             MediaType mediaType = request.getHeaders().getContentType();
+            // webflux请求
             ServerRequest serverRequest = ServerRequest.create(exchange, messageReaders);
+            // json请求
             if (MediaType.APPLICATION_JSON.isCompatibleWith(mediaType)) {
                 return body(exchange, serverRequest, chain);
             }
+            // 表单请求
             if (MediaType.APPLICATION_FORM_URLENCODED.isCompatibleWith(mediaType)) {
                 return formData(exchange, serverRequest, chain);
             }
+            // 塞入转换后的参数信息
             return query(exchange, serverRequest, chain);
         }
         return chain.execute(exchange);

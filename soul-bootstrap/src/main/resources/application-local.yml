@@ -41,7 +41,7 @@ soul:
       parameter: multi
     sync:
       websocket :
-           urls: ws://localhost:9095/websocket
+        urls: ws://localhost:9095/websocket
 #        zookeeper:
 #             url: localhost:2181
 #             sessionTimeout: 5000
