@@ -41,14 +41,14 @@ import java.util.Objects;
  *
  * @author xiaoyu
  */
-public class BodyParamPlugin implements SoulPlugin {
+public class ApacheDubboBodyParamPlugin implements SoulPlugin {
 
     private final List<HttpMessageReader<?>> messageReaders;
 
     /**
      * Instantiates a new Body param plugin.
      */
-    public BodyParamPlugin() {
+    public ApacheDubboBodyParamPlugin() {
         this.messageReaders = HandlerStrategies.withDefaults().messageReaders();
     }
 

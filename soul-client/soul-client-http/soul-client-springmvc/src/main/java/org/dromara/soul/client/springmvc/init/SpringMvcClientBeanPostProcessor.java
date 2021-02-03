@@ -34,7 +34,6 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.lang.reflect.Method;
 import java.util.Objects;
@@ -85,11 +84,11 @@ public class SpringMvcClientBeanPostProcessor implements BeanPostProcessor {
         }
         // @Controller
         Controller controller = AnnotationUtils.findAnnotation(bean.getClass(), Controller.class);
-        // @RestController
-        RestController restController = AnnotationUtils.findAnnotation(bean.getClass(), RestController.class);
+        // @RestController 最新的代码这个删除了
+//        RestController restController = AnnotationUtils.findAnnotation(bean.getClass(), RestController.class);
         // @RequestMapping("/order")
         RequestMapping requestMapping = AnnotationUtils.findAnnotation(bean.getClass(), RequestMapping.class);
-        if (controller != null || restController != null || requestMapping != null) {
+        if (controller != null || requestMapping != null) {//restController != null ||
             // @SoulSpringMvcClient(path = "/order") Controller上的soul注解
             SoulSpringMvcClient clazzAnnotation = AnnotationUtils.findAnnotation(bean.getClass(), SoulSpringMvcClient.class);
             String prePath = "";
