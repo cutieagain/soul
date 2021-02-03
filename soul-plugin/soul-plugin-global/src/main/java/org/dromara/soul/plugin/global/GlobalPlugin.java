@@ -46,15 +46,23 @@ public class GlobalPlugin implements SoulPlugin {
     }
     
     @Override
+    // 全局插件，构造SoulContext
     public Mono<Void> execute(final ServerWebExchange exchange, final SoulPluginChain chain) {
+        // 获取请求信息
         final ServerHttpRequest request = exchange.getRequest();
+        // 获取头信息
         final HttpHeaders headers = request.getHeaders();
+        // 升级？
         final String upgrade = headers.getFirst("Upgrade");
         SoulContext soulContext;
+        // 升级不为空，或者websocket不等于升级
         if (StringUtils.isBlank(upgrade) || !"websocket".equals(upgrade)) {
+            // 封装元数据信息
             soulContext = builder.build(exchange);
         } else {
+            // 获取请求参数
             final MultiValueMap<String, String> queryParams = request.getQueryParams();
+            // 封装参数进soulContext
             soulContext = transformMap(queryParams);
         }
         exchange.getAttributes().put(Constants.CONTEXT, soulContext);

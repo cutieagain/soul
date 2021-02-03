@@ -53,18 +53,27 @@ public class BodyParamPlugin implements SoulPlugin {
     }
 
     @Override
+    // sofa参数解析
     public Mono<Void> execute(final ServerWebExchange exchange, final SoulPluginChain chain) {
+        // 获取请求
         final ServerHttpRequest request = exchange.getRequest();
+        // 获取soulContext
         final SoulContext soulContext = exchange.getAttribute(Constants.CONTEXT);
+        // soulContext不为空且是sofa代理的
         if (Objects.nonNull(soulContext) && RpcTypeEnum.SOFA.getName().equals(soulContext.getRpcType())) {
+            // 获取请求类型
             MediaType mediaType = request.getHeaders().getContentType();
+            // 转换请求
             ServerRequest serverRequest = ServerRequest.create(exchange, messageReaders);
             if (MediaType.APPLICATION_JSON.isCompatibleWith(mediaType)) {
+                // json请求方式参数封装
                 return body(exchange, serverRequest, chain);
             }
             if (MediaType.APPLICATION_FORM_URLENCODED.isCompatibleWith(mediaType)) {
+                // 表单请求方式参数封装
                 return formData(exchange, serverRequest, chain);
             }
+            // get方式的直接解析封装
             return query(exchange, serverRequest, chain);
         }
         return chain.execute(exchange);

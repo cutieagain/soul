@@ -68,19 +68,27 @@ public class SofaProxyService {
      * @return the object
      * @throws SoulException the soul exception
      */
+    // sofa泛化调用
     public Mono<Object> genericInvoker(final String body, final MetaData metaData, final ServerWebExchange exchange) throws SoulException {
+        // 根据元数据中的path获取引用对象
         ConsumerConfig<GenericService> reference = ApplicationConfigCache.getInstance().get(metaData.getPath());
+        // 如果引用对象没有初始化的话则进行初始化
         if (Objects.isNull(reference) || StringUtils.isEmpty(reference.getInterfaceId())) {
             ApplicationConfigCache.getInstance().invalidate(metaData.getServiceName());
             reference = ApplicationConfigCache.getInstance().initRef(metaData);
         }
+        // 泛化服务调用对象
         GenericService genericService = reference.refer();
+        // 参数
         Pair<String[], Object[]> pair;
         if (null == body || "".equals(body) || "{}".equals(body) || "null".equals(body)) {
+            // 参数为空处理
             pair = new ImmutablePair<>(new String[]{}, new Object[]{});
         } else {
+            // 根据body和参数类型构造请求参数
             pair = sofaParamResolveService.buildParameter(body, metaData.getParameterTypes());
         }
+        // 异步调用
         CompletableFuture<Object> future = new CompletableFuture<>();
         RpcInvokeContext.getContext().setResponseCallback(new SofaResponseCallback<Object>() {
             @Override
@@ -98,6 +106,7 @@ public class SofaProxyService {
                 future.completeExceptionally(e);
             }
         });
+        // 执行sofa请求
         genericService.$genericInvoke(metaData.getMethodName(), pair.getLeft(), pair.getRight());
         return Mono.fromFuture(future.thenApply(ret -> {
             if (Objects.isNull(ret)) {

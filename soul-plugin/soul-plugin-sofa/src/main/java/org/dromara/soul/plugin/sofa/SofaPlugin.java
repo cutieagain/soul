@@ -58,23 +58,32 @@ public class SofaPlugin extends AbstractSoulPlugin {
     }
 
     @Override
+    // sofa请求执行
     protected Mono<Void> doExecute(final ServerWebExchange exchange, final SoulPluginChain chain, final SelectorData selector, final RuleData rule) {
+        // 获取sofa处理好的参数
         String body = exchange.getAttribute(Constants.SOFA_PARAMS);
+        // 获取soulContext
         SoulContext soulContext = exchange.getAttribute(Constants.CONTEXT);
         assert soulContext != null;
+        // 获取元数据信息
         MetaData metaData = exchange.getAttribute(Constants.META_DATA);
+        // 检查元数据
         if (!checkMetaData(metaData)) {
+            // 返回错误信息
             assert metaData != null;
             log.error(" path is :{}, meta data have error.... {}", soulContext.getPath(), metaData.toString());
             exchange.getResponse().setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
             Object error = SoulResultWrap.error(SoulResultEnum.META_DATA_ERROR.getCode(), SoulResultEnum.META_DATA_ERROR.getMsg(), null);
             return WebFluxResultUtils.result(exchange, error);
         }
+        // 参数类型和参数为空
         if (StringUtils.isNoneBlank(metaData.getParameterTypes()) && StringUtils.isBlank(body)) {
+            // 返回错误信息
             exchange.getResponse().setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
             Object error = SoulResultWrap.error(SoulResultEnum.SOFA_HAVE_BODY_PARAM.getCode(), SoulResultEnum.SOFA_HAVE_BODY_PARAM.getMsg(), null);
             return WebFluxResultUtils.result(exchange, error);
         }
+        // 代理sofa执行
         final Mono<Object> result = sofaProxyService.genericInvoker(body, metaData, exchange);
         return result.then(chain.execute(exchange));
     }
